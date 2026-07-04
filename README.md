@@ -1,7 +1,23 @@
 # Parametric Curve Fitting — Recovering θ, M, X
 
-Given ~1500 shuffled `(x, y)` points sampled from a parametric curve, recover the three
-unknown constants baked into its equations.
+The dataset consists of $N = 1500$ points $(x_i, y_i)$ believed to lie on the curve
+
+$$x(t) = t\cos(\theta) - e^{M\lvert t\rvert}\sin(0.3t)\sin(\theta) + X$$
+
+$$y(t) = 42 + t\sin(\theta) + e^{M\lvert t\rvert}\sin(0.3t)\cos(\theta)$$
+
+for $t \in [6, 60]$, subject to the bounds
+
+$$0 < \theta < 50^\circ \ (0 < \theta < 0.87266 \ \text{rad}), \qquad -0.05 < M < 0.05, \qquad 0 < X < 100.$$
+
+The assignment scores submissions by the $L_1$ distance between uniformly sampled points
+on the expected curve and the predicted curve:
+
+$$\text{Loss} = \sum_{i=1}^{N} \Big( \lvert x_{\text{proj},i} - x_i \rvert + \lvert y_{\text{proj},i} - y_i \rvert \Big).$$
+
+Because the input coordinates are **not ordered** with respect to $t$, the central
+difficulty is not optimization in itself but establishing which value of $t$ each observed
+point actually corresponds to.
 
 ## Answer
 
@@ -11,7 +27,7 @@ unknown constants baked into its equations.
 | M | **0.03** | — | −0.05–0.05 |
 | X | **55** | — | 0–100 |
 
-Mean L1 error per point ≈ 2×10⁻⁵ (at the CSV's rounding floor — effectively an exact recovery).
+Mean $L_1$ error per point $\approx 2\times10^{-5}$ (at the CSV's rounding floor — effectively an exact recovery).
 
 ## Desmos submission
 
@@ -27,70 +43,71 @@ Equivalent LaTeX form:
 \left(t*\cos(0.5236)-e^{0.03\left|t\right|}\cdot\sin(0.3t)\sin(0.5236)+55,42+t*\sin(0.5236)+e^{0.03\left|t\right|}\cdot\sin(0.3t)\cos(0.5236)\right)
 ```
 
-Domain: `6 ≤ t ≤ 60`.
+Domain: $6 \le t \le 60$.
 Calculator: [desmos.com/calculator/zkfrnxiudo](https://www.desmos.com/calculator/zkfrnxiudo)
 
 ![fitted curve plotted in Desmos](figures/desmos_plot.png)
 
 ## How it was solved
 
-The curve's equations are
-
-```text
-x(t) = t·cos(θ) − e^(M·|t|)·sin(0.3t)·sin(θ) + X
-y(t) = 42 + t·sin(θ) + e^(M·|t|)·sin(0.3t)·cos(θ)
-```
-
 **Insight 1 — it's a rotation plus a translation.** Define a base curve in its own frame:
-`u(t) = t`, `v(t) = e^(M·t)·sin(0.3t)` — a sine wave whose amplitude grows exponentially.
-The given equations are exactly that base curve rotated by θ and shifted by `(X, 42)`.
-The frequency `0.3` and the offset `42` are known, so only θ, M, X are free.
+
+$$u(t) = t, \qquad v(t) = e^{Mt}\sin(0.3t)$$
+
+— a sine wave whose amplitude grows exponentially. The given equations are exactly that
+base curve rotated by $\theta$ and shifted by $(X, 42)$:
+
+$$\begin{bmatrix} x - X \\ y - 42 \end{bmatrix} =
+\begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix}
+\begin{bmatrix} u \\ v \end{bmatrix}$$
+
+The frequency $0.3$ and the offset $42$ are known, so only $\theta$, $M$, $X$ are free.
 
 **Insight 2 — invert the transform, and the shuffling stops mattering.** A rotation is
-invertible. For any candidate `(θ, X)`, map every data point back into the base frame:
+invertible. For any candidate $(\theta, X)$, map every data point back into the base frame:
 
-```text
-u_i =  (x_i − X)·cos θ + (y_i − 42)·sin θ      # this recovers t_i
-v_i = −(x_i − X)·sin θ + (y_i − 42)·cos θ
-```
+$$u_i = (x_i - X)\cos\theta + (y_i - 42)\sin\theta \qquad \text{(this recovers } t_i \text{)}$$
+
+$$v_i = -(x_i - X)\sin\theta + (y_i - 42)\cos\theta$$
 
 At the correct parameters every point must satisfy the base-curve law
-`v_i = e^(M·u_i)·sin(0.3·u_i)` — no knowledge of which `t` produced which point is needed.
+$v_i = e^{M u_i}\sin(0.3 u_i)$ — no knowledge of which $t$ produced which point is needed.
+This resolves the correspondence problem *algebraically* rather than iteratively.
 
 **Objective.** Minimize the sum of squared residuals over the three unknowns:
 
-```text
-minimize_(θ, M, X)   Σ_i [ v_i − e^(M·u_i)·sin(0.3·u_i) ]²
-```
+$$\min_{\theta, M, X} \ \sum_{i=1}^{N} \Big[ v_i - e^{M u_i}\sin(0.3 u_i) \Big]^2$$
 
-**Solver.** The objective is non-convex in `(θ, X)`, so a single local solve can land in the
-wrong basin. `fit.py` runs bounded trust-region least squares
+**Solver.** The objective is non-convex in $(\theta, X)$, so a single local solve can land in
+the wrong basin. `fit.py` runs bounded trust-region least squares
 (`scipy.optimize.least_squares`, `method='trf'`) from a grid of starting points over
-θ ∈ [0°, 50°] and X ∈ [0, 100] (M starting at 0) and keeps the lowest-cost result.
-`x_scale` is set per parameter because θ (~O(1) rad), M (~O(0.01)), and X (~O(10)) live on
-very different scales.
+$\theta \in [0^\circ, 50^\circ]$ and $X \in [0, 100]$ (with $M$ starting at $0$) and keeps
+the lowest-cost result. `x_scale` is set per parameter because $\theta \sim O(1)$ rad,
+$M \sim O(0.01)$, and $X \sim O(10)$ live on very different scales.
 
 **Why the answer is trustworthy.**
 
-- 1500 points constrain only 3 parameters, and the residual RMSE collapses to ~1e-6 — the
-  CSV's rounding floor, not a vague minimum.
-- The recovered `u = t` values land in ≈[6, 60], independently matching the stated domain.
-- θ = 30°, M = 0.03, X = 55 are exact round numbers — the true generating constants.
-- Re-simulating the curve at the recovered `t` and comparing to the raw data with the
-  assignment's own L1 metric gives ≈2×10⁻⁵ (`verify.py`).
+- 1500 points constrain only 3 parameters, and the residual RMSE collapses to
+  $\sim 3\times10^{-6}$ — the CSV's rounding floor, not a vague minimum.
+- The recovered $u = t$ values land in $\approx [6, 60]$, independently matching the
+  stated domain.
+- $\theta = 30^\circ$, $M = 0.03$, $X = 55$ are exact round numbers — the true generating
+  constants.
+- Re-simulating the curve at the recovered $t$ and comparing to the raw data with the
+  assignment's own $L_1$ metric gives $\approx 2\times10^{-5}$ (`verify.py`).
 
 ## Approaches considered — and why the inverse-transform fit wins
 
 Fitting a parametric curve to **unordered** points is a known hard problem in the
 literature because of the *correspondence* (or foot-point) problem: you don't know which
-parameter value `t` produced which point. Published methods fall into four families, all
+parameter value $t$ produced which point. Published methods fall into four families, all
 of which were implemented or evaluated here ([src/alternatives.py](src/alternatives.py)):
 
 **1. Inverse-transform residual least squares (primary method, `fit.py`).**
 The transform is a rigid rotation + translation, which is exactly invertible. Un-rotating
 every point into the base frame turns the problem into an *explicit* function fit
-`v = e^(M·u)·sin(0.3u)` — the correspondence problem disappears algebraically, because the
-recovered `u` **is** `t`. Multi-start bounded trust-region least squares over a (θ, X) grid
+$v = e^{Mu}\sin(0.3u)$ — the correspondence problem disappears algebraically, because the
+recovered $u$ **is** $t$. Multi-start bounded trust-region least squares over a $(\theta, X)$ grid
 handles the non-convexity deterministically. This mirrors the classical treatment of curve
 fitting to unorganized points as nonlinear minimization
 ([Gulliksson et al., *Computer-Aided Design*](https://www.sciencedirect.com/science/article/abs/pii/0010448595907522)),
@@ -135,22 +152,13 @@ so it was evaluated conceptually and not carried further.
 **Why the primary method is best:** it is the only approach that removes the
 correspondence problem *exactly* rather than approximating it. The residual becomes a
 smooth explicit function of just three parameters, so a bounded trust-region solver drives
-it to the data's rounding-precision floor (~3e-6) deterministically — no random seeds, no
+it to the data's rounding-precision floor ($\sim 3\times10^{-6}$) deterministically — no random seeds, no
 sampling-density ceiling, no correspondence iterations. The global optimizers merely agree
 with it; the geometric method is two orders of magnitude less precise at higher cost.
 
 ## Fit overlay
 
 ![data vs. fitted curve](figures/fit_overlay.png)
-
-## Reproduce
-
-```bash
-pip install -r requirements.txt          # numpy scipy pandas matplotlib
-python src/fit.py                        # prints θ, M, X and RMSE
-python src/verify.py                     # prints L1, t-range; writes figures/fit_overlay.png
-python src/alternatives.py               # benchmarks DE, basin hopping, ICP-style fits
-```
 
 ## References
 
