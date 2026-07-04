@@ -141,3 +141,12 @@ python src/fit.py                        # prints θ, M, X and RMSE
 python src/verify.py                     # prints L1, t-range; writes figures/fit_overlay.png
 python src/alternatives.py               # benchmarks DE, basin hopping, ICP-style fits
 ```
+
+## References
+
+1. Wang, W., Pottmann, H., & Liu, Y. — [Fitting B-spline curves to point clouds by curvature-based squared distance minimization](https://dl.acm.org/doi/abs/10.1145/1138450.1138453), *ACM Transactions on Graphics*, 2006.
+2. Gulliksson, M., et al. — [Multidimensional curve fitting to unorganized data points by nonlinear minimization](https://www.sciencedirect.com/science/article/abs/pii/0010448595907522), *Computer-Aided Design*, 1995.
+3. [Iterative closest point](https://en.wikipedia.org/wiki/Iterative_closest_point) — Wikipedia (correspondence-based rigid registration).
+4. [scipy.optimize.differential_evolution](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html) — SciPy manual (global optimization).
+5. [Non-Linear Least-Squares Minimization and Curve-Fitting for Python (lmfit)](https://lmfit.github.io/lmfit-py/fitting.html) — global vs. local solver trade-offs.
+6. [scipy.odr — Orthogonal Distance Regression](https://docs.scipy.org/doc/scipy/reference/odr.html) — SciPy manual (errors-in-variables fitting, ODRPACK).
