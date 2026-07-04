@@ -20,7 +20,7 @@ Mean L1 error per point ≈ 2×10⁻⁵ (at the CSV's rounding floor — effecti
 ```
 
 Domain: `6 ≤ t ≤ 60`.
-Calculator: [desmos.com/calculator/rfj91yrxob](https://www.desmos.com/calculator/rfj91yrxob)
+Calculator: [desmos.com/calculator/zkfrnxiudo](https://www.desmos.com/calculator/zkfrnxiudo)
 
 ## How it was solved
 

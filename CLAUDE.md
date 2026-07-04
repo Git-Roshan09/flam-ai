@@ -267,7 +267,7 @@ matplotlib
 The README should contain, in order:
 1. One-line problem statement and the final answer table (θ=30°, M=0.03, X=55).
 2. The Desmos submission string (Section 1) and the calculator link:
-   `https://www.desmos.com/calculator/rfj91yrxob`
+   `https://www.desmos.com/calculator/zkfrnxiudo`
 3. The methodology narrative from Section 3 — lead with the rotation/translation insight,
    then the inverse-transform trick, the objective, and the solver.
 4. The `figures/fit_overlay.png` image showing data vs. fitted curve.
