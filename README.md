@@ -30,6 +30,8 @@ Equivalent LaTeX form:
 Domain: `6 ≤ t ≤ 60`.
 Calculator: [desmos.com/calculator/zkfrnxiudo](https://www.desmos.com/calculator/zkfrnxiudo)
 
+![fitted curve plotted in Desmos](figures/desmos_plot.png)
+
 ## How it was solved
 
 The curve's equations are
