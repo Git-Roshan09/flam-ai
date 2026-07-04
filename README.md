@@ -15,6 +15,14 @@ Mean L1 error per point ≈ 2×10⁻⁵ (at the CSV's rounding floor — effecti
 
 ## Desmos submission
 
+Copy-paste this into a Desmos expression line (paste-friendly format):
+
+```latex
+(t*\cos(0.523598)-\exp(0.03*\operatorname{abs}(t))*\sin(0.3*t)*\sin(0.523598)+55,42+t*\sin(0.523598)+\exp(0.03*\operatorname{abs}(t))*\sin(0.3*t)*\cos(0.523598))
+```
+
+Equivalent LaTeX form:
+
 ```latex
 \left(t*\cos(0.5236)-e^{0.03\left|t\right|}\cdot\sin(0.3t)\sin(0.5236)+55,42+t*\sin(0.5236)+e^{0.03\left|t\right|}\cdot\sin(0.3t)\cos(0.5236)\right)
 ```
